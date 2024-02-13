@@ -3,7 +3,9 @@ channels:
   - conda-forge
 dependencies:
   - jupyter
-  - hoomd=2.9.5
+    #- hoomd=2.9.5
+  - hoomd=2.4.2
+  - gsd < 3.0
   - mbuild>=0.16.0
   - numpy=1.21
   - pip=20.2

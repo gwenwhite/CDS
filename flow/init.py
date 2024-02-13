@@ -22,10 +22,9 @@ def get_parameters():
     ''''''
     parameters = OrderedDict()
     # System and model params:
-    # MN is the combo of number of chains (M) and chain lengths (N)
-    parameters["x"] = [15]
-    parameters["y"] = [15]
-    parameters["z"] = [15]
+    parameters["x"] = [10]
+    parameters["y"] = [10]
+    parameters["z"] = [10]
     parameters["php"] = [1/3]
     parameters["kT"] = [1.0]
     parameters["n_steps"] = [5e6]
