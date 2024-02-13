@@ -159,7 +159,7 @@ def initial_run(job):
 
 	# Set up GSD writer:
 	hoomd.dump.gsd(
-		filename="trajectory.gsd",
+		filename=job.fn("trajectory.gsd"),
 		period=job.sp.gsd_period,
 		group=hoomd.group.all(),
 		overwrite=True,
