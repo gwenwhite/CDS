@@ -2,11 +2,10 @@ name: cds
 channels:
   - conda-forge
 dependencies:
-  - jupyter
-  - hoomd=2.9.5
-  - gsd>=3.0
-  - mbuild>=0.16.0
-  - numpy=1.21
-  - pip=20.2
+  - cudatoolkit<10.3
+  - hoomd=2.9.7
+  - gsd
+  - mbuild
   - signac==2.1.0
   - signac-flow<0.27
+  - jupyter
