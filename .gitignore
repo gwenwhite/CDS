@@ -3,3 +3,4 @@ signac_project_document.json
 *.out*
 *.signac
 *workspace*
+*.gsd*
