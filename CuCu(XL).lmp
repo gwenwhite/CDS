@@ -1,0 +1,123 @@
+#LAMMPS Simulation for Cu-Cu Diffusion
+
+#Initialization
+units       metal
+dimension   3
+boundary    p   p   p
+atom_style  atomic
+
+#System Properties
+reset_timestep 0
+timestep 0.005
+variable latparam equal 3.61
+variable boxLength equal 30
+variable temperature equal 600
+
+#Create simulation box
+lattice fcc ${latparam}
+region simBox block 0 ${boxLength} 0 ${boxLength} 0 ${boxLength}
+create_box 1 simBox
+region lowerSlab block 0 ${boxLength} 0 ${boxLength} 4.0 10.0
+region upperSlab block 0 ${boxLength} 0 ${boxLength} 20.0 26.0
+create_atoms 1 region lowerSlab
+create_atoms 1 region upperSlab
+group upperSlabs region upperSlab
+group lowerSlabs region lowerSlab
+group lowerSlab type 1
+group upperSlab type 2
+
+#Fixed Bottom Slab
+region fixed_bottom block 0 ${boxLength} 0 ${boxLength} 0 2.0
+create_atoms 1 region fixed_bottom
+group fixedatoms region fixed_bottom
+#fix 1 fixedatoms setforce 0.0 0.0 0.0
+
+#Rigid Top Slab
+region rigid_layer block 0 30.0 0 30.0 28.0 30.0
+create_atoms 1 region rigid_layer
+group rigidtop region rigid_layer
+#fix 2 rigidtop rigid/nve single
+
+#Pillar Definitions
+region pillar1 block 0 6.0  0 6.0  12.0 18.0
+region pillar2 block 12.0 18.0  0 6.0  12.0 18.0
+region pillar3 block 24.0 30.0  0 6.0  12.0 18.0
+region pillar4 block 0 6.0  12.0 18.0  12.0 18.0
+region pillar5 block 12.0 18.0  12.0 18.0  12.0 18.0
+region pillar6 block 24.0 30.0  12.0 18.0  12.0 18.0
+region pillar7 block 0 6.0  24.0 30.0  12.0 18.0
+region pillar8 block 12.0 18.0  24.0 30.0  12.0 18.0
+region pillar9 block 24.0 30.0  24.0 30.0  12.0 18.0
+create_atoms 1 region pillar1
+group pillars1 region pillar1
+create_atoms 1 region pillar2
+group pillars2 region pillar2
+create_atoms 1 region pillar3
+group pillars3 region pillar3
+create_atoms 1 region pillar4
+group pillars4 region pillar4
+create_atoms 1 region pillar5
+group pillars5 region pillar5
+create_atoms 1 region pillar6
+group pillars6 region pillar6
+create_atoms 1 region pillar7
+group pillars7 region pillar7
+create_atoms 1 region pillar8
+group pillars8 region pillar8
+create_atoms 1 region pillar9
+group pillars9 region pillar9
+group pillar1 type 3
+group pillar2 type 3
+group pillar3 type 3
+group pillar4 type 3
+group pillar5 type 3
+group pillar6 type 3
+group pillar7 type 3
+group pillar8 type 3
+group pillar9 type 3
+group combined_group union upperSlabs lowerSlabs pillars1 pillars2 pillars3 pillars4 pillars5 pillars6 pillars7 pillars8 pillars9
+
+#Potential
+pair_style meam
+pair_coeff * * library.meam Cu Cu.meam Cu
+
+#Settings
+
+#EQUILIBRATION
+reset_timestep 0
+timestep 0.005
+velocity all create 300 12345
+
+group non_fixed_atoms subtract all fixedatoms
+fix 1 non_fixed_atoms npt temp 500 600 0.5 iso 0 0 5 drag 1
+fix 2 fixedatoms setforce 0.0 0.0 0.0
+thermo 400
+thermo_style custom step lx ly lz press pxx pyy pzz pe temp
+
+# Use custom dump for Ovito output
+dump 1 all custom 250 dump.Cu.equil.* id x y z fx fy fz
+run 400
+unfix 1
+undump 1
+
+variable tmp equal "lz"
+variable L0 equal ${tmp}
+print "Initial Length, L0: ${L0}"
+
+# DEFORMATION
+reset_timestep 0
+
+fix 1 non_fixed_atoms npt temp 500 600 0.5 iso 0 0 5 drag 1
+fix 3 rigidtop move linear 0.0 0.0 -0.5 units box
+
+# Use custom dump for Ovito output
+dump 2 all custom 250 dump.Cu.comp.* id xs ys zs fx fy fz
+
+# Display thermo, run
+thermo 400
+thermo_style custom step lx ly lz press pxx pyy pzz pe temp
+
+run 1000000
+
+# SIMULATION DONE
+print "All done"
