@@ -48,83 +48,51 @@ delete_atoms    region pillar4
 
 group           allpillars union pillars1 pillars2 pillars3 pillars4
 
-# Potential
-pair_style      meam
-pair_coeff      * * library.meam Cu Cu.meam Cu
+#Potential
+pair_style meam
+pair_coeff * * library.meam Cu Cu.meam Cu
 
-# Settings
+#Settings
 
-# EQUILIBRATION
-reset_timestep  0
-timestep        0.005
-velocity        all create ${temperature} 12345
+#EQUILIBRATION
+reset_timestep 0
+timestep 0.005
+velocity all create 300 12345
 
-group           non_fixed_atoms subtract all fixedatoms
-fix             1 non_fixed_atoms nvt temp ${temperature} ${temperature} 0.1
-fix             2 fixedatoms setforce 0.0 0.0 0.0
-thermo          400
-thermo_style    custom step lx ly lz press pxx pyy pzz pe temp
+group non_fixed_atoms subtract all fixedatoms
+fix 1 non_fixed_atoms npt temp 500 600 0.5 iso 0 0 5 drag 1
+fix 2 fixedatoms setforce 0.0 0.0 0.0
+thermo 400
+thermo_style custom step lx ly lz press pxx pyy pzz pe temp
 
-# Compute potential energy for equilibration
-compute         thermo_pe_equil all pe/atom
+# Use custom dump for Ovito output
+dump 1 all custom 250 dump.Cu.equil.* id x y z fx fy fz
+run 4000
+unfix 1
+undump 1
 
-# Use custom dump for equilibration output
-dump            1 all custom 250 dump.Cu.equil.* id x y z fx fy fz c_thermo_pe_equil
-dump_modify     1 every 1000
+variable tmp equal "lz"
+variable L0 equal ${tmp}
+print "Initial Length, L0: ${L0}"
 
-run             400
-unfix           1
-undump          1
+# DEFORMATION
+reset_timestep 0
 
-variable        tmp equal "lz"
-variable        L0 equal ${tmp}
-print           "Initial Length, L0: ${L0}"
+fix 1 non_fixed_atoms npt temp 500 600 0.5 iso 0 0 5 drag 1
+fix 3 rigidtop move linear 0.0 0.0 -0.1 units box
 
-# TEMPERATURE RAMP
-reset_timestep  0
+#compute lowerSlab_atoms lowerSlab chunk/atom bin/1d z lower 0.0 units box
+#compute upperSlab_atoms upperSlab chunk/atom bin/1d z lower 0.0 units box
+#compute allpillars_atoms allpillars chunk/atom bin/1d z lower 0.0 units box
 
-# Temperature ramp from 300K to 573K at 10^13 K/s
-variable        temp_start equal 300
-variable        temp_end equal 573
-variable        heat_rate equal 1e13
-variable        ramp_time equal (v_temp_end - v_temp_start) / v_heat_rate
-fix             1 non_fixed_atoms npt temp ${temp_start} ${temp_end} 0.1 iso 0 0 5 drag 1 ramp v_temp_start v_temp_end v_heat_rate
-fix             3 rigidtop move linear 0.0 0.0 -2 units box
-
-# Compute potential energy for compression
-compute         thermo_pe_comp all pe/atom
-
-# Use custom dump for compression output
-dump            2 all custom 250 dump.Cu.comp.* id xs ys zs fx fy fz c_thermo_pe_comp
-dump_modify     2 every 1000
+# Use custom dump for Ovito output
+dump 2 all custom 250 dump.Cu.comp.* id xs ys zs fx fy fz
 
 # Display thermo, run
-thermo          400
-thermo_style    custom step lx ly lz press pxx pyy pzz pe temp
+thermo 400
+thermo_style custom step lx ly lz press pxx pyy pzz pe temp
 
-run             ${ramp_time}
-
-unfix           1
-undump          2
-
-# FINAL COMPRESSION
-reset_timestep  0
-
-# Compress at NVT
-fix             4 all nvt temp ${temp_end} ${temp_end} 0.1
-
-# Compute potential energy for final compression
-compute         thermo_pe_final all pe/atom
-
-# Use custom dump for final compression output
-dump            3 all custom 250 dump.Cu.final.* id xs ys zs fx fy fz c_thermo_pe_final
-dump_modify     3 every 1000
-
-# Display thermo, run
-thermo          400
-thermo_style    custom step lx ly lz press pxx pyy pzz pe temp
-
-run             400
+run 40000
 
 # SIMULATION DONE
-print           "All done"
+print "All done"
