@@ -79,7 +79,7 @@ print "Initial Length, L0: ${L0}"
 reset_timestep 0
 
 fix 1 non_fixed_atoms npt temp 500 600 0.5 iso 0 0 5 drag 1
-fix 3 rigidtop move linear 0.0 0.0 -0.1 units box
+fix 3 rigidtop move linear 0.0 0.0 -0.01 units box
 
 #compute lowerSlab_atoms lowerSlab chunk/atom bin/1d z lower 0.0 units box
 #compute upperSlab_atoms upperSlab chunk/atom bin/1d z lower 0.0 units box
