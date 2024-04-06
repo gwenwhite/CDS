@@ -100,7 +100,7 @@ group combinedSlab union lowerSlab upperSlab
 # DEFORMATION
 reset_timestep 0
 
-fix 1 combinedSlab npt temp langevin 573 573 100 12345
+fix 1 combinedSlab langevin 573 573 100 12345
 fix 2 rigidtop move linear 0.0 0.0 -0.01 units box
 
 compute region_density all chunk/atom bin/3d x 0 ${boxLength} y 0 ${boxLength} z 12.5 20
