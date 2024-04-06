@@ -70,7 +70,7 @@ thermo_style custom step lx ly lz press pxx pyy pzz pe temp
 
 # Use custom dump for Ovito output
 dump 1 upperSlab custom 250 dump.Cu.equil.upper.* id x y z fx fy fz
-run 20000
+run 1000
 unfix 1
 undump 1
 
@@ -90,7 +90,7 @@ thermo_style custom step lx ly lz press pxx pyy pzz pe temp
 
 # Use custom dump for Ovito output
 dump 2 lowerSlab custom 250 dump.Cu.equil.lower.* id x y z fx fy fz
-run 20000
+run 1000
 unfix 1
 undump 2
 
@@ -112,6 +112,11 @@ dump 3 combinedSlab custom 250 dump.Cu.comp.* id xs ys zs fx fy fz c_region_dens
 # Display thermo, run
 thermo 400
 thermo_style custom step lx ly lz press pxx pyy pzz pe temp c_region_atoms
+
+run 40000
+
+# SIMULATION DONE
+print "All done"
 
 run 40000
 
