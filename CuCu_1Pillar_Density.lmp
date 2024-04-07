@@ -101,7 +101,7 @@ group combinedSlab union lowerSlab upperSlab
 reset_timestep 0
 
 fix 1 combinedSlab langevin 573 573 100 12345
-fix 2 rigidtop move linear 0.0 0.0 -0.01 units box
+fix 4 rigidtop move linear 0.0 0.0 -0.01 units box
 
 compute region_density all chunk/atom bin/3d x 0 ${boxLength} y 0 ${boxLength} z 12.5 20
 compute region_atoms all reduce sum c_region_density
