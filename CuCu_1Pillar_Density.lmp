@@ -104,10 +104,10 @@ fix 1 combinedSlab langevin 573 573 100 12345
 fix 4 rigidtop move linear 0.0 0.0 -0.01 units box
 
 compute region_density all chunk/atom bin/3d x 0 ${boxLength} y 0 ${boxLength} z 12.5 20
-compute region_atoms all reduce sum c_region_density
+#compute region_atoms all reduce sum c_region_density
 
 # Use custom dump for Ovito output
-dump 3 combinedSlab custom 250 dump.Cu.comp.* id xs ys zs fx fy fz c_region_density
+dump 3 combinedSlab custom 250 dump.Cu.comp.* id xs ys zs fx fy fz region_density
 
 # Display thermo, run
 thermo 400
