@@ -1,8 +1,8 @@
-#3 Pillar NS
+#1 Pillar Scenario
 # Initialization
 units           metal
 dimension       3
-boundary        p p f
+boundary        p p p
 atom_style      atomic
 
 # System Properties
@@ -62,16 +62,17 @@ velocity upperSlab create 300 12345
 
 # Exclude fixedatoms and rigidtop from equilibration
 group non_fixed_atoms subtract all fixedatoms rigidtop
-fix 1 upperSlab langevin 300 300 100 12345
+fix 1 non_fixed_atoms npt temp 300 300 0.5 iso 1.01325 1.01325 1.01325 drag 1 
 fix 2 fixedatoms setforce 0.0 0.0 0.0
 fix 3 rigidtop setforce 0.0 0.0 0.0
+
 
 thermo 400
 thermo_style custom step lx ly lz press pxx pyy pzz pe temp
 
 # Use custom dump for Ovito output
 dump 1 upperSlab custom 250 dump.Cu.equil.upper.* id x y z fx fy fz
-run 1000
+run 10000
 unfix 1
 undump 1
 
@@ -82,7 +83,7 @@ velocity lowerSlab create 300 54321
 
 # Exclude fixedatoms and rigidtop from equilibration
 group non_fixed_atoms subtract all fixedatoms rigidtop
-fix 1 lowerSlab langevin 300 300 100 54321
+fix 1 lowerSlab npt temp 300 300 0.5 iso 1.01325 1.01325 1.01325 drag 1
 fix 2 fixedatoms setforce 0.0 0.0 0.0
 fix 3 rigidtop setforce 0.0 0.0 0.0
 
@@ -91,35 +92,33 @@ thermo_style custom step lx ly lz press pxx pyy pzz pe temp
 
 # Use custom dump for Ovito output
 dump 2 lowerSlab custom 250 dump.Cu.equil.lower.* id x y z fx fy fz
-run 1000
+run 10000
 unfix 1
 undump 2
 
 # Combine both slabs for deformation
-group combinedSlab union lowerSlab upperSlab
+group combinedSlab union lowerSlab upperSlab fixedatoms
 
 # DEFORMATION
 reset_timestep 0
 
-fix 1 combinedSlab langevin 573 573 100 12345
-fix 4 rigidtop move linear 0.0 0.0 -0.01 units box
+fix 1 combinedSlab npt temp 573 573 0.5 iso 1.01325 1.01325 1.01325 drag 1 
+#fix 4 rigidtop move linear 0.0 0.0 -0.1 units box
 
-compute region_density all chunk/atom bin/3d x 0 ${boxLength} y 0 ${boxLength} z 12.5 20
-#compute region_atoms all reduce sum c_region_density
+# Use custom dump for Ovito output (changed from combinedSlab)
+dump 3 combinedSlab custom 250 dump.Cu.comp.* id xs ys zs fx fy fz
 
-# Use custom dump for Ovito output
-dump 3 combinedSlab custom 250 dump.Cu.comp.* id xs ys zs fx fy fz region_density
+# Identify atoms within the specified range on the z-axis
+compute chunkAtoms all chunk/atom bin/3d x 0 ${boxLength} y 0 ${boxLength} z 12.5 20 units box
+
+# Compute chunk-averaged density
+fix 5 combinedSlab ave/chunk 1 10 10 chunkAtoms density/number file density_chunk.out
 
 # Display thermo, run
 thermo 400
-thermo_style custom step lx ly lz press pxx pyy pzz pe temp c_region_atoms
+thermo_style custom step lx ly lz press pxx pyy pzz pe temp
 
-run 40000
-
-# SIMULATION DONE
-print "All done"
-
-run 40000
+run 100000
 
 # SIMULATION DONE
 print "All done"
