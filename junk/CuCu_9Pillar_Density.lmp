@@ -9,38 +9,38 @@ atom_style      atomic
 reset_timestep  0
 timestep        0.005
 variable        latparam equal 3.61
-variable        boxLength equal 45
+variable        boxLength equal 22.5
 variable        temperature equal 300
 
 # Create simulation box
 lattice         fcc ${latparam}
-region          simBox block 0 ${boxLength} 0 ${boxLength} 0 55
+region          simBox block 0 ${boxLength} 0 ${boxLength} 0 27.5
 create_box      1 simBox
-region          lowerSlab block 0 ${boxLength} 0 ${boxLength} 2 35.509
-region          upperSlab block 0 ${boxLength} 0 ${boxLength} 36.509 47.259
+region          lowerSlab block 0 ${boxLength} 0 ${boxLength} 1 17.7545
+region          upperSlab block 0 ${boxLength} 0 ${boxLength} 18.2545 23.6295
 create_atoms    1 region lowerSlab
 create_atoms    1 region upperSlab
 group           lowerSlab region lowerSlab
 group           upperSlab region upperSlab
 
 # Fixed Bottom Slab
-region          fixed_bottom block 0 ${boxLength} 0 ${boxLength} 0 1
+region          fixed_bottom block 0 ${boxLength} 0 ${boxLength} 0 0.5
 create_atoms    1 region fixed_bottom
 group           fixedatoms region fixed_bottom
 
 # Rigid Top Slab
-region          rigid_layer block 0 45 0 45 48.259 49.259
+region          rigid_layer block 0 22.5 0 22.5 24.1295 24.6295
 create_atoms    1 region rigid_layer
 group           rigidtop region rigid_layer
 
 # Etching regions
-region          pillar1 block 0 45 26.845 36.31 12.75 35.509
+region          pillar1 block 0 22.5 13.4225 18.155 6.375 17.7545
 group           pillars1 region pillar1
-region          pillar2 block 0 45 8.69 18.155 12.75 35.509
+region          pillar2 block 0 22.5 4.345 9.0775 3.1875 17.7545
 group           pillars2 region pillar2
-region          pillar3 block 8.69 18.155 0 45 12.75 35.509
+region          pillar3 block 4.345 9.0775 0 22.5 6.375 17.7545
 group           pillars3 region pillar3
-region          pillar4 block 26.845 36.31 0 45 12.75 35.509
+region          pillar4 block 13.4225 18.255 0 22.5 6.375 17.7545
 group           pillars4 region pillar4
 delete_atoms    region pillar1
 delete_atoms    region pillar2
