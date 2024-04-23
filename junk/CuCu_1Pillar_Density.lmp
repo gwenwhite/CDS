@@ -118,7 +118,7 @@ fix 5 combinedSlab ave/chunk 1 10 10 chunkAtoms density/number file density_chun
 thermo 400
 thermo_style custom step lx ly lz press pxx pyy pzz pe temp
 
-run 100000
+run 1000000
 
 # SIMULATION DONE
 print "All done"
