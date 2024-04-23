@@ -1,0 +1,168 @@
+#3 Pillar Scenario (Voids)
+# Initialization
+units           metal
+dimension       3
+boundary        p p p
+atom_style      atomic
+
+# System Properties
+reset_timestep  0
+timestep        0.005
+variable        latparam equal 3.61
+variable        boxLength equal 22.5
+variable        temperature equal 300
+
+# Create simulation box
+lattice         fcc ${latparam}
+region          simBox block 0 ${boxLength} 0 ${boxLength} 0 27.5
+create_box      1 simBox
+region          lowerSlab block 0 ${boxLength} 0 ${boxLength} 1 17.7545
+region          upperSlab block 0 ${boxLength} 0 ${boxLength} 18.2545 23.6295
+create_atoms    1 region lowerSlab
+create_atoms    1 region upperSlab
+group           lowerSlab region lowerSlab
+group           upperSlab region upperSlab
+
+# Fixed Bottom Slab
+region          fixed_bottom block 0 ${boxLength} 0 ${boxLength} 0 0.5
+create_atoms    1 region fixed_bottom
+group           fixedatoms region fixed_bottom
+
+# Rigid Top Slab
+region          rigid_layer block 0 22.5 0 22.5 24.1295 24.6295
+create_atoms    1 region rigid_layer
+group           rigidtop region rigid_layer
+
+# Etching regions
+region          pillar1 block 7.5 22.5 0 15 6.375 17.7545
+group           pillars1 region pillar1
+region          pillar2 block 15 22.5 7.5 15 6.375 17.7545
+group           pillars2 region pillar2
+region          pillar3 block 0 7.5 7.5 22.5 6.375 17.7545
+group           pillars3 region pillar3
+region          pillar4 block 7.5 15 15 22.5 6.375 17.7545
+group           pillars4 region pillar4
+delete_atoms    region pillar1
+delete_atoms    region pillar2
+delete_atoms    region pillar3
+delete_atoms    region pillar4
+
+# Void Regions (upperSlab)
+region			void1 block 9.77 12.77 4.79 7.79 19.23 22.23
+region			void2 block 4.22 7.22 3.23 6.23 20.55 23.55
+region 			void3 block 17.27 20.27 6.92 9.92 23.05 26.05
+region			void4 block 21.22 24.22 19.64 22.64 19.92 22.92
+region			void5 block 6.86 9.86 1.48 4.48 22.81 25.81
+region			void6 block 0.47 3.47 15.13 18.13 20.95 23.95
+region			void7 block 16.78 19.78 14.64 17.64 21.32 24.32
+region			void8 block 19.01 22.01 2.42 5.42 20.35 23.35
+region 			void9 block 9.14 12.14 20.87 23.87 19.89 22.89
+region			void10 block 20.36 23.36 6.61 9.61 23.55 26.55
+delete_atoms	region void1
+delete_atoms	region void2
+delete_atoms	region void3
+delete_atoms	region void4
+delete_atoms	region void5
+delete_atoms	region void6
+delete_atoms	region void7
+delete_atoms	region void8
+delete_atoms	region void9
+delete_atoms	region void10
+
+# Void Regions (lowerSlab)
+region			void11 block 10.96 13.96 14.63 17.63 9.87 12.87
+region			void12 block 3.71 6.71 20.64 23.64 8.78 11.78
+region 			void13 block 11.81 14.81 10.85 13.85 9.17 12.17
+region			void14 block 7.24 10.24 14.89 17.89 7.26 10.26
+region			void15 block 9.49 12.49 18.07 21.07 2.80 5.80
+region			void16 block 19.03 22.03 13.33 16.33 3.62 6.62
+region			void17 block 14.87 17.87 13.04 16.04 16.12 19.12
+region			void18 block 13.31 16.31 19.48 22.48 3.39 6.39
+region 			void19 block 2.41 5.41 4.75 7.75 6.23 9.23
+region			void20 block 0.32 3.32 1.96 4.96 6.14 9.14
+delete_atoms	region void11
+delete_atoms	region void12
+delete_atoms	region void13
+delete_atoms	region void14
+delete_atoms	region void15
+delete_atoms	region void16
+delete_atoms	region void17
+delete_atoms	region void18
+delete_atoms	region void19
+delete_atoms	region void20
+
+group           allpillars union pillars1 pillars2 pillars3 pillars4
+
+# Potential
+pair_style meam
+pair_coeff * * library.meam Cu Cu.meam Cu
+
+# Settings
+
+# EQUILIBRATION - Upper Slab
+reset_timestep 0
+timestep 0.005
+velocity upperSlab create 300 12345
+
+# Exclude fixedatoms and rigidtop from equilibration
+group non_fixed_atoms subtract all fixedatoms rigidtop
+fix 1 non_fixed_atoms npt temp 300 300 0.5 iso 1.01325 1.01325 1.01325 drag 1 
+fix 2 fixedatoms setforce 0.0 0.0 0.0
+fix 3 rigidtop setforce 0.0 0.0 0.0
+
+
+thermo 400
+thermo_style custom step lx ly lz press pxx pyy pzz pe temp
+
+# Use custom dump for Ovito output
+dump 1 upperSlab custom 250 dump.Cu.equil.upper.* id x y z fx fy fz
+run 10000
+unfix 1
+undump 1
+
+# EQUILIBRATION - Lower Slab
+reset_timestep 0
+timestep 0.005
+velocity lowerSlab create 300 54321
+
+# Exclude fixedatoms and rigidtop from equilibration
+group non_fixed_atoms subtract all fixedatoms rigidtop
+fix 1 lowerSlab npt temp 300 300 0.5 iso 1.01325 1.01325 1.01325 drag 1
+fix 2 fixedatoms setforce 0.0 0.0 0.0
+fix 3 rigidtop setforce 0.0 0.0 0.0
+
+thermo 400
+thermo_style custom step lx ly lz press pxx pyy pzz pe temp
+
+# Use custom dump for Ovito output
+dump 2 lowerSlab custom 250 dump.Cu.equil.lower.* id x y z fx fy fz
+run 10000
+unfix 1
+undump 2
+
+# Combine both slabs for deformation
+group combinedSlab union lowerSlab upperSlab fixedatoms
+
+# DEFORMATION
+reset_timestep 0
+
+fix 1 combinedSlab npt temp 573 573 0.5 iso 1.01325 1.01325 1.01325 drag 1 
+#fix 4 rigidtop move linear 0.0 0.0 -0.1 units box
+
+# Use custom dump for Ovito output (changed from combinedSlab)
+dump 3 combinedSlab custom 250 dump.Cu.comp.* id xs ys zs fx fy fz
+
+# Identify atoms within the specified range on the z-axis
+compute chunkAtoms all chunk/atom bin/3d x 0 ${boxLength} y 0 ${boxLength} z 12.5 20 units box
+
+# Compute chunk-averaged density
+fix 5 combinedSlab ave/chunk 1 10 10 chunkAtoms density/number file density_chunk.out
+
+# Display thermo, run
+thermo 400
+thermo_style custom step lx ly lz press pxx pyy pzz pe temp
+
+run 1000000
+
+# SIMULATION DONE
+print "All done"
